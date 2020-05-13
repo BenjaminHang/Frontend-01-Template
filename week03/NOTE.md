@@ -1,20 +1,20 @@
 ### 表达式，类型转换
 
-right hand-side: 
+right-hand side: 
   Member、New、Call
 
-left hand-side: 
+left-hand side: 
   Update、Unary、Exponential、Multiplicative、Additive、Shift、Relationship、Equality、Bitwise、Logical、Condition
 
 #### 数字转字符串，字符串转数字
 ```javascript
-const convertStringToNumber = (string, hex = 10) => {
+const convertStringToNumber = (string, radix = 10) => {
   const chars = string.split('');
   let number = 0;
 
   let i = 0;
   while (i < chars.length && chars[i] !== '.') {
-    number = number * hex;
+    number = number * radix;
     number += chars[i].codePointAt(0) - '0'.codePointAt(0);
     i++;
   }
@@ -25,7 +25,7 @@ const convertStringToNumber = (string, hex = 10) => {
 
   let fraction = 1;
   while (i < chars.length) {
-    fraction = fraction / hex;
+    fraction = fraction / radix;
     number += (chars[i].codePointAt(0) - '0'.codePointAt(0)) * fraction;
     i++;
   }
@@ -33,28 +33,33 @@ const convertStringToNumber = (string, hex = 10) => {
   return number;
 }
 
-const convertNumberToString = (number, hex = 10) => {
-  let integer = Math.floor(number);
-  let fraction = number - integer;
+const convertNumberToString = (number, radix = 10) => {
+  let sign = number < 0;
+  number = sign ? -number : number;
+  let i = 0
+  while (Math.abs(number - Math.round(number)) > Number.EPSILON) {
+    number = number * radix;
+    i++
+  }
+  
   let string = '';
-
-  while (integer > 0) {
-    string = integer % hex + string;
-    integer = Math.floor(integer / hex);
+  let j = 0;
+  while (number > 0) {
+    if (i !== 0 && i === j) {
+      string = '.' + string;
+    }
+    string = number % radix + string;
+    j++;
+    number = Math.floor(number / radix);
+  }
+  
+  if (j === 0) {
+    string = '0';
+  } else if (i === j){
+    string = '0.' + string
   }
 
-  if (fraction > 0) {
-    string += '.';
-  }
-
-
-  while (fraction > 0) {
-    let integer = Math.floor(fraction * hex);
-    string += integer;
-    fraction = fraction * hex - integer;
-  }
-
-  return string;
+  return (sign ? '-' : '') + string;
 }
 ```
 
