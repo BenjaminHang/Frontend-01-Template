@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Realm Object</title>
+  <style>
+    #chartContainer {
+      width: 80vw;
+      height: 80vh;
+    }
+  </style>
+  <script src="./echarts.min.js"></script>
+  <script src="./get-realm-object.js"></script>
+</head>
+<body>
+  <div id="chartContainer"></div>
+  <script>
+    let options = {
+      legend: {
+        data: categories,
+      },
+      series: [
+      {
+        name: 'realm object relation',
+        type: 'graph',
+        layout: 'force',
+        data: chartNodes,
+        links: chartLinks,
+        roam: true,
+        categories: categories,
+        focusNodeAdjacency: true,
+        symbolSize: 5,
+        itemStyle: {
+          borderColor: '#fff',
+          borderWidth: 1,
+          shadowBlur: 4,
+          shadowColor: 'rgba(0, 0, 0, 0.3)'
+        },
+        label: {
+          position: 'right',
+          formatter: '{b}'
+        },
+        lineStyle: {
+          color: 'source',
+          curveness: 0.1
+        },
+        emphasis: {
+          lineStyle: {
+            width: 10
+          }
+        }
+      }]
+    };
+    echarts.init(document.querySelector('#chartContainer')).setOption(options);
+  </script>
+</body>
+</html>

@@ -1,8 +1,3 @@
-### 有限状态机
-
-#### 挑战题：我们如何用状态机处理完全未知的 pattern（选做）
-
-```javascript
 function match(pattern, string) {
   let arr = [];
   let end = function() {
@@ -31,6 +26,3 @@ function match(pattern, string) {
   }
   return state === end;
 }
-```
-
-
