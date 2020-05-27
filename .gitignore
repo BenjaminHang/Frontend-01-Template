@@ -2,3 +2,6 @@
 .idea
 week04/echarts.min.js
 .vscode/settings.json
+node_modules
+package.json
+package-lock.json

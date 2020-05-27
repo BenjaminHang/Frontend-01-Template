@@ -1,27 +1,25 @@
 function match(pattern, string) {
   let arr = [];
-  let end = function() {
+  let end = function () {
     return end;
   }
   let flag = 1;
   for (let i = 0; i < pattern.length + 1; i++) {
-    arr.push({
-        check: i ? (char) => {
-          return pattern[i - 1] === char; 
-        } : undefined,
-        state: i < pattern.length ? ((_i, _flag) => char => { 
-          if (arr[_i + 1].check(char)) {
-            return arr[_i + 1].state;
-          } else if(arr[_flag].check(char)){
-            return arr[_flag].state;
-          } else {
-            return arr[0].state;
-          }
-        })(i, (i !== flag && pattern[i - 1] === pattern[flag - 1]) ? ++flag : (flag = 1)) : end
-    });
+    arr.push(i < pattern.length ? ((_i, _flag) => char => {
+      if (pattern[_i] === char) {
+        return arr[_i + 1];
+      } else if (pattern[_flag - 1] === char) {
+        return arr[_flag];
+      } else if (pattern[0] === char) {
+        return arr[1];
+      } else {
+        return arr[0];
+      }
+    })(i, (i !== flag && pattern[i - 1] === pattern[flag - 1]) ? ++flag : (flag = (pattern[i - 1] === pattern[0] ? 2 : 1))) : end
+    );
   }
-  let state = arr[0].state;
-  for(let i = 0; i < string.length; i++) {
+  let state = arr[0];
+  for (let i = 0; i < string.length; i++) {
     state = state(string[i]);
   }
   return state === end;
