@@ -15,7 +15,7 @@ function match(element, selector) {
         }
       } else if (part.charAt(0) === '.') {
         let attr = pointer.attributes.find(v => v.name === 'class');
-        if (attr.value.split(/\s+/).includes(part.slice(1))) {
+        if (attr && attr.value.split(/\s+/).includes(part.slice(1))) {
           return true;
         }
       } else if (part.charAt(0) === '[') {

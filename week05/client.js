@@ -1,5 +1,7 @@
 const net = require('net');
+const images = require('images');
 const parser = require('../week06/parser');
+const render = require('../week07/render');
 
 
 class Request {
@@ -223,5 +225,8 @@ let request = new Request({
 });
 
 request.send().then(res => {
-    console.log(parser.parseHTML(res.body));
+    let dom = parser.parseHTML(res.body);
+    let viewport = images(100, 100);
+    render(viewport, dom.children[0].children[3].children[3]);
+    viewport.save('result.jpg');
 });

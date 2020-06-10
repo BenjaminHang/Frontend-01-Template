@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://unpkg.com/spritejs@3/dist/spritejs.js"></script>
+</head>
+<body>
+  <label id="controlPoints">control points: <input type="text" value="0 0,1 1"></label>
+  <label id="duration">duration: <input type="number" value="10000"></label>
+  <label id="iteration">iteration<input type="number" value="1"></label>
+  <button id="drawBtn">draw</button>
+  <div id="container" style="height: 600px;width: 1000px;margin:0 auto;">
+  </div>
+  <script>
+    const { Scene, Path, Polyline, Group, Arc } = spritejs;
+    const colors = ['#8FD200', '#0060F0', '#823CAC', '#04AFFE', '#FF9933', '#9B3200', '#009D5A', '#99ADB7', '#2F444F', '#64D9FF', '#002F91', '#8686FF', '#FFBE9F', '#587E94', '#C80921', '#CC9900', '#D8DFE2', '#006666', '#666633'];
+    const container = document.querySelector('#container');
+    const scene = new Scene({
+      container,
+      width: 1000,
+      height: 600,
+    });
+    const layer = scene.layer();
+    
+    let startP = [50, 550], endP = [550, 50], controlPs, duration, iteration;
+    let points = [];
+    let count = 0;
+
+    initParams();
+
+    function initParams() {
+      controlPs = document.querySelector('#controlPoints input').value.split(',').map(v => v.split(/\s/).map((v, i) => i ? (550 - +v * 500) : (+v * 500 + 50)));
+      duration = +document.querySelector('#duration input').value;
+      iteration = +document.querySelector('#iteration input').value;
+      points = [startP, ...controlPs, endP];
+      layer.removeAllChildren();
+      layer.append(...createElements(points));
+      layer.append(new Polyline({
+        pos: [0, 0],
+        points: [600, 300, 1000, 300],
+        strokeColor: 'grey',
+        lineWidth: 1
+      }));
+      if (controlPs.length === 1) {
+        const path = new Path();
+        path.attr({
+          pos: [0, 0],
+          d: 'M' + startP.join(' ') + 'Q' + controlPs[0].join(' ') + ',' + endP.join(' '),
+          strokeColor: 'blue',
+          lineWidth: 2
+        });
+        layer.append(path);
+      }
+      if (controlPs.length === 2) {
+        const path = new Path();
+        path.attr({
+          pos: [0, 0],
+          d: 'M' + startP.join(' ') + 'C' + controlPs[0].join(' ') + ',' + controlPs[1].join(' ') + ',' + endP.join(' '),
+          strokeColor: 'blue',
+          lineWidth: 2
+        });
+        layer.append(path);
+      }
+      count = 0;
+    }
+
+
+    function createElements(points, colorOffset) {
+      let elements = [];
+      for (let i = 0; i < points.length - 1; i++) {
+        const point = new Arc();
+        point.attr({
+          pos: points[i],
+          radius: 4,
+          startAngle: 0,
+          endAngle: 360,
+          fillColor: colors[(colorOffset || 0) % 20],
+        });
+        const line = new Polyline();
+        line.attr({
+          pos: [0, 0],
+          points: [...points[i], ...points[i + 1]],
+          strokeColor: colors[(colorOffset || 0) % 20],
+          lineWidth: 2
+        });
+        elements.push(point, line);
+      }
+      elements.push(new Arc({
+        pos: points[points.length - 1],
+        radius: 4,
+        startAngle: 0,
+        endAngle: 360,
+        fillColor: colors[(colorOffset || 0) % 20],
+      }))
+      return elements;
+    }
+
+    
+    let group = null;
+    let timer = null;
+    animation();
+    
+    function animation() {
+      let resLine = [...startP];
+      let velocityLine = [];
+      let t = 0;
+      if (timer) {
+        clearInterval(timer);
+      }
+      timer = setInterval(function() {
+        if (group) {
+          group.removeAllChildren();
+        }
+        group = new Group();
+        let tempPoints = points.slice();
+        let colorOffset = 1;
+        while(tempPoints.length > 1) {
+          let createPoints = [];
+          for(let i = 0; i < tempPoints.length - 1; i++) {
+            createPoints.push([0, 1].map(v => (tempPoints[i + 1][v] - tempPoints[i][v]) * (t > 1 ? 1 : t) + tempPoints[i][v]));
+          }
+          group.append(...createElements(createPoints, colorOffset));
+          if (createPoints.length === 1) {
+            resLine.push(...createPoints[0]);
+            const line = new Polyline();
+            line.attr({
+              pos: [0, 0],
+              points: resLine,
+              strokeColor: 'red',
+              lineWidth: 2
+            });
+            group.append(line);
+            if (resLine[resLine.length - 1] - resLine[resLine.length - 3]) {
+              velocityLine.push((velocityLine[velocityLine.length - 2] || 600) + 400 * 200 / duration
+              , (resLine[resLine.length - 1] - resLine[resLine.length - 3]) / (resLine[resLine.length - 2] - resLine[resLine.length - 4]) * 10 + 300);
+              group.append(new Polyline({
+                pos: [0, 0],
+                points: velocityLine,
+                strokeColor: 'red',
+                lineWidth: 2
+              }));
+            }
+          }
+          colorOffset++;
+          tempPoints = createPoints;
+        }
+        layer.append(group);
+        if (t > 1) {
+          clearInterval(timer);
+          if (group && count < iteration - 1) {
+            count++;
+            animation();
+          }
+        }
+        t += 200 / duration;
+      }, 200);
+    }
+
+    document.querySelector('#drawBtn').addEventListener('click', () => {
+      initParams();
+      animation();
+    })
+
+  </script>
+</body>
+</html>
