@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="../node_modules/vue/dist/vue.global.js"></script>
+  <style>
+    #app {
+      margin: 20px 50px;
+    }
+
+    .tip {
+      font-size: 12px;
+    }
+
+    .board {
+      display: inline-block;
+      margin-top: 10px;
+      background-color: chocolate;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .cell {
+      width: 30px;
+      height: 30px;
+      box-sizing: border-box;
+      border: 1px solid #fff;
+      font-size: 27px;
+      line-height: 30px;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .cell[data-val = "X"] {
+      color: black;
+    }
+
+    .cell[data-val = "O"] {
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    const { createApp, ref }  = Vue;
+    let symbol = ['O', 'X'];
+    createApp({
+      template: `<button @click="go = !go">{{ go ? ('先手 ' + symbol[0] + ' ') : ('后手 ' + symbol[1] + ' ') }}!</button>
+      &nbsp;&nbsp;&nbsp;<button @click="start">start</button><br>
+      <span class="tip">{{ over ? (draw ? '平局!!' : (yourTurn ? 'you win!!' : 'you lose!!')) : (doing ? (yourTurn ? '轮到你了': '等待对方') : '')}}</span><br>
+      <div class="board">
+        <div class="row" v-for="(row, rowIndex) in status" :key="rowIndex">
+          <div class="cell" v-for="(val, columnIndex) in row" @click="next(rowIndex, columnIndex)" :key="columnIndex" :data-val="symbol[val] || ''">
+            {{ symbol[val] || '' }}
+          </div>
+        </div>
+      </div>`,
+      setup() {
+        const go = ref(true);
+        const doing = ref(false);
+        const over = ref(false);
+        const draw = ref(false);
+        const status = ref(initBoard(3, 3));
+        const start = () => {
+          status.value.forEach(row => {
+            for (let i = 0; i < row.length; i++) {
+              row[i] = undefined;
+            }
+          });
+          doing.value = true;
+          over.value = false;
+          draw.value = false;
+          if (go.value) {
+            yourTurn.value = true;
+          } else {
+            yourTurn.value = false;
+            let val = go.value ? 1 : 0;
+            opponentNext(status.value, val).then(([row, column]) => {
+              status.value[row][column] = val;
+              yourTurn.value = !yourTurn.value;
+            });
+          }
+        };
+        const yourTurn = ref(false);
+
+        const next = (row, column) => {
+          if (over.value || !yourTurn.value || status.value[row][column] != undefined) return;
+          let val = go.value ? 0 : 1;
+          let res = setPlace(row, column, val);
+          if (res === 'continue') {
+            let val = go.value ? 1 : 0;
+            opponentNext(status.value, val).then(([row, column]) => {
+              setPlace(row, column, val);
+            })
+          }
+        };
+
+        function setPlace(row, column, val) {
+          status.value[row][column] = val;
+          if (willWin3(status.value, val, row, column)) {
+            over.value = true;
+            doing.value = false;
+            return 'win';
+          } else if (status.value.every(row => row.every(v => v != undefined))){
+            over.value = true;
+            draw.value = true;
+            doing.value = false;
+            return 'drawn';
+          } else {
+            yourTurn.value = !yourTurn.value;
+            return 'continue';
+          }
+        }
+        return {
+          doing,
+          start,
+          over,
+          draw,
+          symbol,
+          yourTurn,
+          go,
+          status,
+          next
+        }
+      }
+    }).mount('#app');
+
+    function initBoard(m, n) {
+      return Array.from(new Array(m), () => new Array(n).fill(undefined));
+    }
+
+    function opponentNext(status, val) {
+      let dupStatus = Array.from(status, row => row.slice());
+      return new Promise(resolve => {
+        setTimeout(() => {
+          let res = bestChoice(dupStatus, val)
+          console.log(res);
+          resolve(res.reduce((acc, cur) => {
+            return cur[2] >= acc[2] ? cur : acc;
+          }).slice(0, 2));
+        }, 300);
+      })
+    }
+
+    function willWinFactory(n) {
+      return function (status, val, px, py) {
+        let nArr = Array.from(new Array(n), (v, i) => i);
+        for (let row = 0; row < status.length; row++) {
+          for (let column = 0; column < status[row].length; column++) {
+            if (row === px && column > py - n && column < py + 1 &&
+              column < status[row].length - 1 - n + 2 && 
+              nArr.every(i => status[row][column + i] === val)
+            ) {
+              return true;
+            }
+            if (column === py && row > row - n && row < px + 1 &&
+              row < status.length - 1 - n + 2 && 
+              nArr.every(i => status[row + i][column] === val)
+            ) {
+              return true;
+            }
+            if (nArr.some(i => (row + i === px) && (column + i === py)) &&
+              row < status.length - 1 - n + 2 && column < status[row].length - 1 - n + 2 &&
+              nArr.every(i => status[row + i][column + i] === val)
+            ) {
+              return true;
+            }
+            if (
+              nArr.some(i => (row + i === px) && (column - i === py)) &&
+              row < status.length - 1 - n + 2 && column > 1 &&
+              nArr.every(i => status[row + i][column - i] === val)
+            ) {
+              return true;
+            }
+          }
+        }
+        return false
+      }
+    }
+  
+    let willWin3 = willWinFactory(3);
+
+    function bestChoice(status, val) {
+      let opponentChoice = [];
+      for (let row = 0; row < status.length; row++) {
+        for (let column = 0; column < status[row].length; column++) {
+          if (status[row][column] == undefined) {
+            status[row][column] = val;
+            if (willWin3(status, val, row, column)) {
+              status[row][column] = undefined;
+              opponentChoice.push([row, column, 1]);
+            } else {
+              let res = bestChoice(status, 1 - val);
+              status[row][column] = undefined;
+              opponentChoice.push([row, column, res.length ? 1 - res.reduce((acc, cur) => acc + weight(cur[2]), 0) / res.length : 0]);
+            }
+          }
+        }
+      }
+      return opponentChoice;
+    }
+
+    function weight(factor) {
+      return 1 / (1 + Math.exp(0.5 - factor));
+    }
+  </script>
+</body>
+</html>

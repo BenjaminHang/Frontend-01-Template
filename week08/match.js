@@ -3,15 +3,21 @@ function matchDescendant(selector, element) {
   if (!matchSibling(selectorParts[0], element)) {
     return false;
   }
-  let pointer = element.parentElement;
+  let j = 0, sPointer = element;
+  let pointer = sPointer.parentElement;
   let i = 1;
-  while (pointer && i < selectorParts.length) {
+  while (pointer && i < selectorParts.length && i > 0) {
     let [parts, combinator] = selectorParts[i].match(/^([^]+?)([>\s]*)$/).slice(1, 3);
+    if (combinator !== '>') {
+      j = i;
+      sPointer = pointer;
+    }
     if (matchSibling(parts, pointer)) {
       i++;
     } else {
       if (combinator === '>') {
-        break;
+        i = j;
+        pointer = sPointer;
       }
     }
     pointer = pointer.parentElement;
@@ -27,15 +33,21 @@ function matchSibling(selector, element) {
   if (selectorParts.length === 1) return true;
   let parentElement = element.parentElement;
   if (!parentElement) return false;
-  let pointerIndex = Array.prototype.indexOf.call(parentElement.children, element) - 1;
+  let j = 0, sIndex = Array.prototype.indexOf.call(parentElement.children, element);
+  let pointerIndex = sIndex - 1;
   let i = 1;
-  while (pointerIndex > -1 && i < selectorParts.length) {
+  while (pointerIndex > -1 && i < selectorParts.length && i > 0) {
     let [parts, combinator] = selectorParts[i].match(/^([^]+?)([\+~]*)$/).slice(1, 3);
-    if (matchCompound(parts, parentElement[pointerIndex])) {
+    if (combinator !== '+') {
+      j = i;
+      sIndex = pointerIndex;
+    }
+    if (matchCompound(parts, parentElement.children[pointerIndex])) {
       i++;
     } else {
       if (combinator === '+') {
-        break;
+        i = j;
+        pointerIndex = sIndex;
       }
     }
     pointerIndex -= 1;
@@ -45,7 +57,6 @@ function matchSibling(selector, element) {
 
 function matchCompound(parts, element) {
   return parts.match(/^(\*|[a-z]+)|[#\.][a-z_-][a-z0-9_-]*|\[[a-z]+=[^]*?\]|\:[^\:]+/g).every(part => {
-    console.log(part);
     if (!element) return false;
     if (part === '*') return true;
     if (part.charAt(0) === '#') {
@@ -124,7 +135,6 @@ function matchNthChild(part, element) { // odd even -n + 3
 }
 
 function matchNthOfType(part, element) {
-  console.log(part)
   let matchArr = part.match(/^:nth-of-type\((([0-9]*)n)?\+?([0-9]*)?\)$/);
   let base = matchArr[2];
   let offset = matchArr[3];
