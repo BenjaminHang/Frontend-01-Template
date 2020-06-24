@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traffic Light</title>
+  <style>
+    div {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      margin: 20px;
+      border-radius: 50%;
+      background-color: grey;
+    }
+  </style>
+</head>
+<body>
+  <div id="red">
+  </div>
+  <div id="yellow">
+  </div>
+  <div id="green">
+  </div>
+  
+  <button>next</button>
+
+  <script>
+    let node = {};
+    ['red', 'yellow', 'green'].forEach((color) => {
+      node[color] = document.querySelector(`#${color}`);
+    });
+    function light(color, time) {
+      return new Promise(resolve => {
+        node[color].style.backgroundColor = color;
+        setTimeout(() => {
+          node[color].style.backgroundColor = 'grey';
+          resolve();
+        }, time);
+      });
+    }
+    
+    function go() {
+      light('yellow', 10000)
+      .then(()=> light('green', 2000))
+      .then(() => light('red', 5000))
+      .then(() => {
+        go();
+      });
+    }
+    go();
+  </script>
+</body>
+</html>

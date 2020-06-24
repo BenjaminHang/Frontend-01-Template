@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RegExp</title>
+  <style>
+    .keywords {
+      color: hotpink;
+    }
+    .identifier {
+      color: cyan;
+    }
+    .punctuator {
+      color: coral;
+    }
+  </style>
+</head>
+<body>
+  <pre id="code"></pre>
+  <script>
+    let str = `
+    function sleep(time) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve();
+        }, time);
+      })
+    }`;
+
+    let reg = /(function|return|new)|([ \t\r\n]+)|([a-zA-Z][a-zA-Z0-9]*)|([\(\)\{\}\;\,])/g;
+
+    let dictionary = ['keywords', 'whitespace', 'identifier', 'punctuator'];
+
+    let token = null;
+
+    let fregNode = document.createDocumentFragment();
+    let codeNode = document.querySelector('#code');
+
+    while(reg.lastIndex < str.length - 1) {
+      let match = reg.exec(str);
+      if (!match) {
+        break;
+      }
+      let span = document.createElement('span');
+      span.textContent = match[0];
+      for(let i = 1; i < dictionary.length + 1; i++) {
+        if (match[i] != undefined) {
+          span.classList.add(dictionary[i - 1]);
+        }
+      }
+      fregNode.appendChild(span);
+    }
+    codeNode.appendChild(fregNode);
+
+  </script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maze</title>
+  <style>
+    #container {
+      width: 601px;
+      margin-left: 80px;
+      line-height: 0;
+    }
+
+    #container div {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      box-sizing: border-box;
+      border-top: 1px solid white;
+      border-right: 1px solid white;
+      background-color: #999;
+    }
+    #container div.wall {
+      background-color: black;
+    }
+    #container div.pass {
+      background-color: greenyellow;
+    }
+    #container div.path {
+      background-color: blueviolet;
+    }
+    .button {
+      float: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="button">
+    <button id="save">Save</button><br>
+    <button id="clear">Clear</button><br>
+    <button id="refresh">Refresh</button>
+  </div>
+  <div id="container"></div>
+
+  <script>
+    let mazeMap = localStorage.getItem('mazeMap');
+    if (mazeMap) {
+      mazeMap = mazeMap.split(',').map(v => +v);
+    } else {
+      mazeMap = new Array(100 * 100).fill(0);
+    }
+    let container = document.querySelector('#container');
+    let freg = document.createDocumentFragment();
+    for(let i = 0; i < 100; i++) {
+      for(let j = 0; j < 100; j++) {
+        let item = document.createElement('div');
+        if (mazeMap[i * 100 + j] === 1) {
+          item.classList.add('wall');
+        }
+        item.setAttribute('data-pos', `${i},${j}`)
+        freg.appendChild(item);
+        item.addEventListener('mouseover', () => {
+          if (mousedown) {
+            if (clear) {
+              item.classList.remove('wall');
+              mazeMap[i * 100 + j] = 0;
+            } else {
+              item.classList.add('wall');
+              mazeMap[i * 100 + j] = 1;
+            }
+          }
+        });
+      }
+    }
+    container.appendChild(freg);
+
+    let mousedown = false;
+    let clear = false;
+    document.addEventListener('mousedown', (e) => {
+      mousedown = true;
+      clear = e.button === 2;
+    });
+    document.addEventListener('mouseup', () => {
+      mousedown = false;
+    });
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    
+    document.querySelector('#save').addEventListener('click', () => {
+      localStorage.setItem('mazeMap', mazeMap.join(','));
+    });
+    document.querySelector('#refresh').addEventListener('click', () => {
+      location.assign('');
+    });
+    document.querySelector('#clear').addEventListener('click', () => {
+      let items = document.querySelector('#container').children;
+      mazeMap.forEach((v, i) => {
+        mazeMap[i] = 0;
+        items[i].classList.remove('wall');
+      });
+    });
+
+    class Sorted {
+      constructor(data, sort) {
+        this.data = [];
+        this.sort = sort;
+        for(let i = 0; i < data.length; i++) {
+          this.insert(data[i]);
+        }
+      }
+      take(sort) {
+        let res = this.data[0];
+        let i = 0;
+        let tmp = res;
+        while(i < this.data.length) {
+          let leftIndex = i * 2 + 1;
+          if (leftIndex >= this.data.length) {
+            this.data[i] = undefined;
+            break;
+          } else if (leftIndex + 1 >= this.data.length) {
+            this.data[i] = this.data[leftIndex];
+            i = leftIndex;
+          } else if(this.sort(this.data[leftIndex], this.data[leftIndex + 1]) > 0){
+            this.data[i] = this.data[leftIndex + 1];
+            i = leftIndex + 1;
+          } else {
+            this.data[i] = this.data[leftIndex];
+            i = leftIndex;
+          }
+        }
+        if (i < this.data.length - 1) {
+          this.insert(this.data.pop(), i);
+        } else {
+          this.data.pop();
+        }
+        return res;
+      }
+      insert(v, pos) {
+        let i = pos || this.data.length;
+        this.data[i] = v;
+        while(i >= 0) {
+          let tmp = this.data[i];
+          let parentIndex = Math.floor((i - 1) / 2);
+          if (parentIndex < 0) {
+            break;
+          }
+          if (this.sort(this.data[parentIndex], this.data[i]) > 0) {
+            this.data[i] = this.data[parentIndex];
+            this.data[parentIndex] = tmp;
+            i = parentIndex;
+          } else {
+            break;
+          }
+        }
+      }
+      get length() {
+        return this.data.length;
+      }
+    }
+
+    async function findPath(map, start, end) {
+      let dupMap = map.slice();
+      let collection = new Sorted([start], (a, b) => manhattanDis(a, end) - manhattanDis(b, end));
+      while(collection.length) {
+        let [x, y] = collection.take();
+        let targetPointes = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]
+        for(let i = 0; i < 4; i++) {
+          if (canInsert(dupMap, targetPointes[i])) {
+            let [px, py] = targetPointes[i]
+            dupMap[px * 100 + py] = [x, y];
+            document.querySelector('#container').children[px * 100 + py].classList.add('pass');
+            collection.insert([px, py]);
+            if (targetPointes[i].join() === end.join()) {
+              let [pathX, pathY] = [px, py];
+              while(dupMap[pathX * 100 + pathY] instanceof Array) {
+                document.querySelector('#container').children[pathX * 100 + pathY].classList.add('path');
+                await sleep(2);
+                [pathX, pathY] = dupMap[pathX * 100 + pathY];
+              }
+              return true;
+            }
+            await sleep(5);
+          } else {
+            if (targetPointes[i].join() === end.join()) {
+              return false;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    function canInsert(map, [x, y]) {
+      if (x < 0 || x >= 100 || y < 0 || y >= 100) {
+        return false;
+      }
+      if (map[x * 100 + y] !== 0) {
+        return false;
+      }
+      return true;
+    }
+
+    function manhattanDis(a, b) {
+      return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+    }
+
+    function sleep(time) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve();
+        }, time);
+      })
+    }
+
+
+  </script>
+</body>
+</html>
