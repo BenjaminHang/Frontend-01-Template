@@ -32,13 +32,19 @@
     .button {
       float: left;
     }
+    .button input {
+      width: 30px;
+    }
   </style>
 </head>
 <body>
   <div class="button">
     <button id="save">Save</button><br>
     <button id="clear">Clear</button><br>
-    <button id="refresh">Refresh</button>
+    <button id="refresh">Refresh</button><br>
+    <label id="start" for="">start<br><input type="number" data-type="x"><input type="number" data-type="y"></label><br>
+    <label id="end" for="">end<br><input type="number" data-type="x"><input type="number" data-type="y"></label><br>
+    <button id="go">Go!</button>
   </div>
   <div id="container"></div>
 
@@ -98,6 +104,12 @@
         items[i].classList.remove('wall');
       });
     });
+    document.querySelector('#go').addEventListener('click', () => {
+      let start = [+document.querySelector('#start input[data-type="x"]').value, +document.querySelector('#start input[data-type="y"]').value]
+      let end = [+document.querySelector('#end input[data-type="x"]').value, +document.querySelector('#end input[data-type="y"]').value]
+      findPath(mazeMap, start, end);
+    });
+
 
     class Sorted {
       constructor(data, sort) {
@@ -159,7 +171,8 @@
 
     async function findPath(map, start, end) {
       let dupMap = map.slice();
-      let collection = new Sorted([start], (a, b) => manhattanDis(a, end) - manhattanDis(b, end));
+      let fromStart = dupMap.map((v, i) => i === start[0] * 100 + start[1] ? 0 : Infinity);
+      let collection = new Sorted([start], (a, b) => (manhattanDis(a, end) + fromStart[a[0] * 100 + a[1]]) - (manhattanDis(b, end) + fromStart[b[0] * 100 + b[1]]));
       while(collection.length) {
         let [x, y] = collection.take();
         let targetPointes = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]
@@ -167,6 +180,7 @@
           if (canInsert(dupMap, targetPointes[i])) {
             let [px, py] = targetPointes[i]
             dupMap[px * 100 + py] = [x, y];
+            fromStart[px * 100 + py] = fromStart[x * 100 + y] + 1;
             document.querySelector('#container').children[px * 100 + py].classList.add('pass');
             collection.insert([px, py]);
             if (targetPointes[i].join() === end.join()) {
@@ -199,8 +213,8 @@
       return true;
     }
 
-    function manhattanDis(a, b) {
-      return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+    function manhattanDis(a, end) {
+      return Math.abs(a[0] - end[0]) + Math.abs(a[1] - end[1]);
     }
 
     function sleep(time) {

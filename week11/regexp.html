@@ -37,7 +37,7 @@
     let fregNode = document.createDocumentFragment();
     let codeNode = document.querySelector('#code');
 
-    while(reg.lastIndex < str.length - 1) {
+    while(reg.lastIndex < str.length) {
       let match = reg.exec(str);
       if (!match) {
         break;
