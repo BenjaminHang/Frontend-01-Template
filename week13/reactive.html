@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reactive</title>
+</head>
+<body>
+  <div style="margin: 20px;">
+    <input type="range" name="" id="r" min="0" max="255" value="255"><br>
+    <input type="range" name="" id="g" min="0" max="255" value="255"><br>
+    <input type="range" name="" id="b" min="0" max="255" value="255"><br>
+    <div id="board" style="width: 100px;height: 100px;border: 1px solid #888;"></div>
+  </div>
+
+
+  <script>
+    let handlers = new Map()
+    let usedReactivities = []
+
+    let reactivities = new Map()
+    function reactive(obj) {
+      if (reactivities.has(obj))
+        return reactivities.get(obj)
+
+      let p = new Proxy(obj, {
+        get(target, prop) {
+          usedReactivities.push([obj, prop])
+          if (typeof target[prop] === 'object')
+            return reactive(obj[prop])
+          return target[prop]
+        },
+        set(target, prop, val) {
+          target[prop] = val
+          if (handlers.has(obj) && handlers.get(obj).has(prop)) {
+            handlers.get(obj).get(prop).forEach(handler => {
+              handler()
+            })
+          }
+          return true
+        }
+      })
+
+      return p
+    }
+
+    function effect(handler) {
+      usedReactivities = [];
+      handler();
+      usedReactivities.forEach(usedReactivity => {
+        let [obj, prop] = usedReactivity;
+        if (!handlers.has(obj))
+          handlers.set(obj, new Map())
+        if (!handlers.get(obj).has(prop))
+          handlers.get(obj).set(prop, [])
+
+        handlers.get(obj).get(prop).push(handler)
+      })
+    }
+
+    let obj = {
+      a: 1,
+      b: { b1: 1 }
+    }
+    let p = reactive(obj);
+    let dummy
+
+    effect(() => {dummy = p.a + p.b.b1})
+
+    p.b = {b1: 2}
+
+    console.log(dummy) // 3
+
+    let rgb = {r: 255, g: 255, b: 255}
+    rgb = reactive(rgb)
+    let color
+    effect(() => {color = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`})
+
+    document.querySelector('#r').addEventListener('input', (e) => {
+      rgb.r = e.target.value
+      document.querySelector('#board').style.backgroundColor = color
+    })
+    document.querySelector('#g').addEventListener('input', (e) => {
+      rgb.g = e.target.value
+      document.querySelector('#board').style.backgroundColor = color
+    })
+    document.querySelector('#b').addEventListener('input', (e) => {
+      rgb.b = e.target.value
+      console.log(color)
+      document.querySelector('#board').style.backgroundColor = color
+    })
+
+
+
+  </script>
+</body>
+</html>

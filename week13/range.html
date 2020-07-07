@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Range</title>
+</head>
+<body>
+  <div id="textarea" class="">
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+    文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字
+  </div>
+  <div id="block" style="display: inline-block;width: 100px;height: 100px;background-color: burlywood;"></div>
+  <script>
+    let textarea = document.querySelector('#textarea')
+    let ranges = []
+    for(let i = 0; i < textarea.childNodes[0].textContent.length; i++) {
+      let range = document.createRange();
+      range.setStart(textarea.childNodes[0], i)
+      range.setEnd(textarea.childNodes[0], i)
+      ranges.push(range)
+    }
+
+    function nearest(ox, oy) {
+      let range
+      let odis = Infinity
+      for(let i = 0; i < ranges.length; i++) {
+        let {x, y} = ranges[i].getBoundingClientRect()
+        let dis = (ox - x) ** 2 + (oy - y) ** 2
+        if (dis < odis) {
+          odis = dis
+          range = ranges[i]
+        }
+      }
+      return range
+    }
+
+
+    let block = document.querySelector('#block')
+    let x = 0, y = 0;
+    block.addEventListener('mousedown', (e) => {
+      let clientX = e.clientX
+      let clientY = e.clientY
+      function move(e) {
+        // block.style.transform = `translate(${x + e.clientX - clientX}px, ${y + e.clientY - clientY}px)`
+        let range = nearest(e.clientX, e.clientY)
+        range.insertNode(block)
+      }
+      document.addEventListener('mousemove', move)
+
+      function mouseup(e) {
+        x += e.clientX - clientX
+        y += e.clientY - clientY
+        document.removeEventListener('mousemove', move)
+        document.removeEventListener('mouseup', mouseup)
+      }
+      document.addEventListener('mouseup', mouseup)
+    })
+
+
+    document.addEventListener('selectstart', (e) => { e.preventDefault() })
+  </script>
+</body>
+</html>
