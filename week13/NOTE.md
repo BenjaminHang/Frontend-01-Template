@@ -5,11 +5,10 @@
 ### 组件化
 
 #### 组件内容
-* End User Input
-  * State
-  * Children
+* State
+* Children
 * Component User's Markup Code
-  * atrribute
+  * attribute
 * Component User's JS Code
   * Method
   * Property

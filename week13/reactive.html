@@ -31,6 +31,12 @@
           return target[prop]
         },
         set(target, prop, val) {
+          if (typeof target[prop] === 'object' && typeof val === 'object') {
+            let hd = handlers.get(target[prop])
+            if (hd && !handlers.get(val)) {
+              handlers.set(val, hd)
+            }
+          }
           target[prop] = val
           if (handlers.has(obj) && handlers.get(obj).has(prop)) {
             handlers.get(obj).get(prop).forEach(handler => {

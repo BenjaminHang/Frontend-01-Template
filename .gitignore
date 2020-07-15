@@ -5,3 +5,4 @@ week04/echarts.min.js
 node_modules
 package.json
 package-lock.json
+**/dist/**
