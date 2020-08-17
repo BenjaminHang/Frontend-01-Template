@@ -1,0 +1,12 @@
+.tab-panel .tab {
+  margin: 10px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.tab-panel .panel {
+  width: 300px;
+  height: 300px;
+  padding: 10px;
+  border: 1px solid orange;
+}

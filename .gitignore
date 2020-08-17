@@ -3,6 +3,10 @@
 week04/echarts.min.js
 .vscode/settings.json
 node_modules
-package.json
 package-lock.json
 **/dist/**
+.nyc_output/*
+week19/p-test/*
+package.json
+week19/publish-system/server/public/cat.jpg
+week19/publish-system/server/public/index.html

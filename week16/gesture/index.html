@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gesture</title>
+  <style>
+    #block {
+      width: 100px;
+      height: 100px;
+      background-color: chocolate;
+    }
+  </style>
+</head>
+<body>
+  <div id="block"></div>
+  <script type="module">
+    import gesture from './gesture.js';
+    const el = document.querySelector('#block');
+    gesture(el);
+
+    let startX = 0;
+    let startY = 0;
+
+    el.addEventListener('panmove', (e) => {
+      let x = e.detail.clientX - e.detail.startX + startX;
+      let y = e.detail.clientY - e.detail.startY + startY;
+      el.style.transform = `translate(${x}px, ${y}px)`;
+    });
+
+    el.addEventListener('panend', (e) => {
+      startX = e.detail.clientX - e.detail.startX + startX;
+      startY = e.detail.clientY - e.detail.startY + startY;
+      el.style.transform = `translate(${startX}px, ${startY}px)`;
+    })
+  </script>
+</body>
+</html>

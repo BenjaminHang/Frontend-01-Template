@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animation</title>
+  <style>
+    .block {
+      width: 100px;
+      height: 100px;
+      background-color: chocolate;
+    }
+  </style>
+</head>
+<body>
+  <div class="block" id="block"></div>
+  <div id="empty"></div>
+  <button id="start">start</button>
+  <button id="pause">pause</button>
+  <button id="resume">resume</button>
+  <button id="end">end</button>
+  <button id="add">add</button><input id="startP" type="number">ms
+  <script type="module">
+    import { Timeline, Animation } from './animation.js';
+    import cubicBezier from './cubicBezier.js';
+
+    const el = document.querySelector('#block');
+
+    const timingFun = cubicBezier(0, 0.2, 1, 0.1);
+
+    let timeline = new Timeline();
+    let animation = new Animation(
+      el.style,
+      'transform',
+      x => `translateX(${x}px)`,
+      0, 200, 5000, 0,
+      timingFun
+    );
+    timeline.add(animation);
+
+    let colorAnimation = new Animation(
+      el.style,
+      'backgroundColor',
+      v => {
+        let r = 255 + (0 - 255) * v;
+        let g = 255 + (255 - 255) * v;
+        let b = 255 + (255 - 255) * v;
+        let a = 1 + (1 - 1) * v;
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      },
+      0, 1, 5000, 0,
+      timingFun
+    );
+    timeline.add(colorAnimation);
+    
+    document.querySelector('#start').addEventListener('click', () => {
+      timeline.start();
+    });
+
+    document.querySelector('#end').addEventListener('click', () => {
+      timeline.end();
+    });
+
+    document.querySelector('#pause').addEventListener('click', () => {
+      timeline.pause();
+    });
+
+    document.querySelector('#resume').addEventListener('click', () => {
+      timeline.resume();
+    });
+
+    document.querySelector('#add').addEventListener('click', () => {
+      let blockEl = document.createElement('div');
+      blockEl.classList.add('block');
+      let emptyEl = document.querySelector('#empty');
+      document.body.insertBefore(blockEl, emptyEl);
+      let startP = document.querySelector('#startP').value;
+      let animation = new Animation(
+        blockEl.style,
+        'transform',
+        x => `translateX(${x}px)`,
+        0, 200, 5000, 0,
+        timingFun
+      );
+      timeline.add(animation, startP === '' ? null : +startP);
+    });
+  </script>
+</body>
+</html>

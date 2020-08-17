@@ -1,0 +1,14 @@
+<template>
+  <div class="carousal">
+    <div class="wrapper">
+      <img class="image"/>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {};
+</script>
+
+<style>
+</style>

@@ -93,15 +93,16 @@ function tagOpen(c) {
     }
     return tagName(c);
   } else {
+    emit({
+      type: 'text',
+      content: '<'
+    });
     return data(c);
   }
 }
 
 function endTagOpen(c) {
-  if (c === EOF) {
-    emit('EOF');
-    return end;
-  } else if (c.match(/^[a-zA-Z]$/)) {
+  if (c.match(/^[a-zA-Z]$/)) {
     return tagName(c);
   } else {
     return endTagOpen;
@@ -127,9 +128,6 @@ function selfClosingStartTag(c) {
     currentToken.isSelfClosing = true;
     emit(currentToken);
     return data;
-  } else if (c === EOF) {
-    emit('EOF');
-    return end;
   } else {
     return beforeAttributeName(c);
   }
@@ -151,6 +149,9 @@ function beforeAttributeName(c) {
 
 function attributeName(c) {
   if (c.match(/^[\t\n\f ]/) || c === '/' || c === '>' || c === EOF) {
+    if (currentAttribute) {
+      currentToken.attributes.push(currentAttribute);
+    }
     return afterAttributeName(c);
   } else if (c === '=') {
     return beforeAttributeValue;
@@ -161,17 +162,12 @@ function attributeName(c) {
 }
 
 function afterAttributeName(c) {
-  if (c === EOF) {
-    emit('EOF')
-    return end;
-  } else if (c.match(/^[\t\n\f ]$/)) {
+  if (c.match(/^[\t\n\f ]$/)) {
     return afterAttributeName;
   } else if (c === '/') {
     return selfClosingStartTag;
   } else if (c === '>') {
     emit(currentToken);
-    return data;
-  } else {
     return data;
   }
 }
@@ -236,11 +232,13 @@ function afterQuotedAttributeValue(c) {
     emit(currentToken);
     return data;
   } else {
+    currentToken.attributes.push(currentAttribute);
     return beforeAttributeName(c);
   }
 }
 
 module.exports.parseHTML = function (html) {
+  stack = [{ type: 'document', children: [] }];
   let state = data;
   for (let c of html) {
     state = state(c);
