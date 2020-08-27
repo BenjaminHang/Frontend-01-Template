@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Publish</title>
+</head>
+<body>
+  <input type="file" name="" id="file" accept=".zip">
+  <button id="publish">Publish</button><br>
+  <textarea name="" id="result" cols="30" rows="10"></textarea>
+
+  <script>
+    document.querySelector('#publish').addEventListener('click', (e) => {
+      let files = document.querySelector('#file').files
+      if (!files.length) return;
+      const formData = new FormData();
+      formData.append('file', files[0])
+      fetch('/upload', {
+        method: 'POST',
+        body: formData
+      }).then(res => {
+        res.text().then(text => {
+          document.querySelector('#result').value = text;
+        })
+      })
+    })
+  </script>
+</body>
+</html>
