@@ -8,5 +8,4 @@ package-lock.json
 .nyc_output/*
 week19/p-test/*
 package.json
-week19/publish-system/server/public/cat.jpg
-week19/publish-system/server/public/index.html
+week19/publish-system/server/public/*

@@ -8,6 +8,19 @@ module.exports = class extends Generator {
       { title: 'p-test' }
     );
   }
+  gitInit() {
+    this.spawnCommandSync('git', ['init']);
+
+    this.fs.copyTpl(
+      this.templatePath('gitignore'),
+      this.destinationPath('.gitignore')
+    );
+
+    this.fs.copyTpl(
+      this.templatePath('pre-commit'),
+      this.destinationPath('.git/hooks/pre-commit')
+    );
+  }
   installDependencies() {
     this.npmInstall([
       "@babel/core",
@@ -15,6 +28,7 @@ module.exports = class extends Generator {
       "@babel/preset-env",
       "babel-loader",
       "css",
+      "eslint",
       "esm",
       'html-webpack-plugin',
       "mocha",
@@ -51,8 +65,16 @@ module.exports = class extends Generator {
       this.destinationPath('test/example.spec.js')
     );
     this.fs.copyTpl(
-      this.templatePath('.nycrc'),
+      this.templatePath('nycrc'),
       this.destinationPath('.nycrc')
+    );
+    this.fs.copyTpl(
+      this.templatePath('publish.js'),
+      this.destinationPath('publish.js')
+    );
+    this.fs.copyTpl(
+      this.templatePath('eslintrc'),
+      this.destinationPath('.eslintrc')
     );
   }
 };

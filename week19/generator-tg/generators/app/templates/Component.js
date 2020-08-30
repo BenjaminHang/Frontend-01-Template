@@ -1,9 +1,9 @@
 export function create(Cls, attributes, ...children) {
-  let component = null
+  let component = null;
   if (typeof Cls === 'string') {
-    component = new Wrapper(Cls)
+    component = new Wrapper(Cls);
   } else {
-    component = new Cls()
+    component = new Cls();
   }
   for (let attr in attributes) {
     component.setAttribute(attr, attributes[attr]);
@@ -12,64 +12,64 @@ export function create(Cls, attributes, ...children) {
   let visit = (children) => {
     for (let child of children) {
       if (typeof child === 'string') {
-        child = new Text(child)
+        child = new Text(child);
       }
       if (child instanceof Array) {
-        visit(child)
-        continue
+        visit(child);
+        continue;
       }
-      component.appendChild(child)
+      component.appendChild(child);
     }
-  }
-  visit(children)
+  };
+  visit(children);
 
-  return component
+  return component;
 }
 
 export default class Component {
 
   constructor() {
-    this.children = []
-    this.root = document.createElement('div')
+    this.children = [];
+    this.root = document.createElement('div');
   }
 
   set class(val) {
-    console.log('class', val)
+    console.log('class', val);
   }
 
   setAttribute(attr, val) {
-    this[attr] = val
-    this.root.setAttribute(attr, val)
+    this[attr] = val;
+    this.root.setAttribute(attr, val);
   }
 
   appendChild(child) {
-    this.children.push(child)
-    this.root.appendChild(child.root)
+    this.children.push(child);
+    this.root.appendChild(child.root);
   }
 
   mountTo(Node) {
-    Node.appendChild(this.root)
+    Node.appendChild(this.root);
   }
 }
 
 class Wrapper extends Component {
   constructor(tag) {
-    super()
-    this.root = document.createElement(tag)
+    super();
+    this.root = document.createElement(tag);
   }
 
   addEventListener() {
-    this.root.addEventListener(...arguments)
+    this.root.addEventListener(...arguments);
   }
 
   get style() {
-    return this.root.style
+    return this.root.style;
   }
 }
 
 class Text extends Component {
   constructor(text) {
-    super()
-    this.root = document.createTextNode(text)
+    super();
+    this.root = document.createTextNode(text);
   }
 }

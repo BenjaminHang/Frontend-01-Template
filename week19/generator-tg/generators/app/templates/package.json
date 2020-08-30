@@ -7,6 +7,8 @@
     "test": "mocha --require esm",
     "coverage": "nyc --require esm mocha",
     "start": "webpack-dev-server",
-    "build": "webpack"
+    "build": "webpack",
+    "lint": "eslint ./src/**/*.js",
+    "publish": "node ./publish.js"
   }
 }

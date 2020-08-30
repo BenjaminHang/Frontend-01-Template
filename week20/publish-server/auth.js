@@ -49,10 +49,10 @@ async function getUserInfo(token) {
     method: 'GET',
     headers: {
       'Authorization': `token ${token}`,
-      'User-Agent': 'ta9xy' 
+      'User-Agent': `ta9xy`
     }
   }
-  return await new Promise(resolve => {
+  return await new Promise((resolve, reject) => {
     const req = https.request(option, res => {
       let data = '';
       res.on('data', chunk => {
@@ -70,6 +70,7 @@ async function getUserInfo(token) {
     })
     req.on('error', (e) => {
       console.log(e)
+      reject(e);
     })
     req.end()
   })
